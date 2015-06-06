@@ -27,7 +27,9 @@ public class UpdaterService extends Service {
     new Thread(new Runnable() {
       public void run() {
         while (true) {
-          MainActivity.dropbox.update();
+          if (MainActivity.dropbox != null) {
+            MainActivity.dropbox.update();
+          }
           try {
             Thread.sleep(5000);
           } catch (InterruptedException e) {

@@ -8,9 +8,11 @@ import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 
@@ -26,12 +28,14 @@ public class Dropbox {
   private Activity myActivity;
   private DropboxAPI<AndroidAuthSession> mApi;
   private Button loginButton;
+  private TextView accountTextView;
 
   public Dropbox(Activity myActivity) {
     this.myActivity = myActivity;
     AndroidAuthSession session = buildSession();
     mApi = new DropboxAPI<AndroidAuthSession>(session);
     loginButton = (Button) myActivity.findViewById(R.id.login);
+    accountTextView = (TextView) myActivity.findViewById(R.id.accout);
     loginButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -42,6 +46,7 @@ public class Dropbox {
         }
       }
     });
+    updateUI();
   }
 
   public void resume() {
@@ -77,7 +82,17 @@ public class Dropbox {
     boolean isInstalled = isInstalled();
     myActivity.findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
     myActivity.findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
-    loginButton.setText(isLogin() ? "logout" : "login");
+    loginButton.setText(isLogin() ? "Detach" : "Attach");
+    myActivity.findViewById(R.id.dropbox).setVisibility(isLogin() ? View.VISIBLE : View.GONE);
+    accountTextView.setVisibility(isLogin() ? View.VISIBLE : View.GONE);
+    try {
+      if (isLogin()) {
+        String email = mApi.accountInfo().email;
+        accountTextView.setText(email);
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
   }
 
   private void showToast(String msg) {

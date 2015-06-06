@@ -8,34 +8,28 @@
       android:id="@+id/login"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Login"/>
-  <ImageView
-      android:id="@+id/imageView"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:background="@drawable/dropbox256"
-      android:layout_below="@+id/login"
-      android:onClick="chooseDropboxFolder"/>
-  <ImageView
-      android:id="@+id/mark"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:background="@drawable/updated"
-      android:layout_below="@+id/login"/>
+      android:layout_alignParentTop="true"
+      android:layout_alignRight="@+id/dropbox"/>
+  <RelativeLayout android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:id="@+id/dropbox"
+                  android:layout_below="@+id/login">
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dropbox256"
+        android:onClick="chooseDropboxFolder"/>
+    <ImageView
+        android:id="@+id/mark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/updated"/>
+  </RelativeLayout>
   <TextView
-      android:id="@+id/textView2"
+      android:id="@+id/accout"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_below="@+id/imageView"
-      android:layout_alignLeft="@+id/imageView"
-      android:text="Dropbox Helper"
-      android:layout_centerInParent="true"/>
-
-  <!--<Button
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:text="Choose folder..."
-      android:id="@+id/button2"
-      android:layout_above="@+id/imageView"
-      android:layout_alignRight="@+id/imageView"/>-->
+      android:layout_alignTop="@+id/login"
+      android:layout_alignLeft="@+id/dropbox"/>
 </RelativeLayout>

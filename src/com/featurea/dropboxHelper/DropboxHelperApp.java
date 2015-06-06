@@ -22,13 +22,6 @@ public class DropboxHelperApp extends Application {
     }
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-
-  }
-
-
   public static String getRoot() {
     String packageName = instance.getPackageName();
     File dir;

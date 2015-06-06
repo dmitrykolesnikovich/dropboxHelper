@@ -5,16 +5,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.ProgressListener;
+import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+import java.io.*;
+import java.util.*;
 
 public class Dropbox {
 
@@ -29,6 +38,8 @@ public class Dropbox {
   private DropboxAPI<AndroidAuthSession> mApi;
   private Button loginButton;
   private TextView accountTextView;
+  private DropboxAnimation dropboxAnimation;
+
 
   public Dropbox(Activity myActivity) {
     this.myActivity = myActivity;
@@ -46,34 +57,146 @@ public class Dropbox {
         }
       }
     });
+    dropboxAnimation = new DropboxAnimation(myActivity);
     updateUI();
+  }
+
+  public DropboxAPI.Entry metadataWithDeleted(String path, int fileLimit, String hash, boolean list, String rev) throws DropboxException {
+    if (isLogin()) {
+      Session session = mApi.getSession();
+      if (fileLimit <= 0) {
+        fileLimit = 25000;
+      }
+      String[] params = new String[]{
+          "file_limit", String.valueOf(fileLimit),
+          "include_deleted", String.valueOf(true),
+          "hash", hash,
+          "list", String.valueOf(list),
+          "rev", rev,
+          "locale", session.getLocale().toString()
+
+      };
+      String url_path = "/metadata/" + session.getAccessType() + path;
+      Map dirinfo = (Map) RESTUtility.request(RESTUtility.RequestMethod.GET, session.getAPIServer(), url_path, 1, params, session);
+      return new DropboxAPI.Entry(dirinfo);
+    } else {
+      return null;
+    }
   }
 
   public void resume() {
     AndroidAuthSession session = mApi.getSession();
-
-
-    // The next part must be inserted in the onResume() method of the
-    // activity from which session.startAuthentication() was called, so
-    // that Dropbox authentication completes properly.
     if (session.authenticationSuccessful()) {
       try {
-        // Mandatory call to complete the auth
         session.finishAuthentication();
-
-        // Store it locally in our app for later use
         storeAuth(session);
       } catch (IllegalStateException e) {
         showToast("Couldn't authenticate with Dropbox:" + e.getLocalizedMessage());
         Log.i(TAG, "Error authenticating", e);
       }
     }
-
     updateUI();
   }
 
   public void install() {
     myActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + ID)));
+  }
+
+  private int counter;
+
+  public void update() {
+    if (isLogin()) {
+      List<DropboxAPI.Entry> files = getFiles();
+      System.out.println(TAG + " size: " + files.size());
+      for (DropboxAPI.Entry entry : files) {
+        System.out.println(entry.fileName());
+        download(entry);
+      }
+    }
+  }
+
+  private void download(final DropboxAPI.Entry entry) {
+    new AsyncTask() {
+
+      @Override
+      protected void onPreExecute() {
+        super.onPreExecute();
+        counter++;
+      }
+
+      @Override
+      protected Object doInBackground(Object[] params) {
+        if (entry.isDeleted) {
+          deleteFile(entry);
+        } else {
+          updateFile(entry);
+        }
+
+        return null;
+      }
+
+      @Override
+      protected void onProgressUpdate(Object[] values) {
+        super.onProgressUpdate(values);
+        updateUI();
+      }
+
+      @Override
+      protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
+        counter--;
+        updateUI();
+      }
+    }.execute();
+  }
+
+  private void deleteFile(DropboxAPI.Entry entry) {
+    File file = new File(getRoot() + "/" + entry.path);
+    file.delete();
+    System.out.println(TAG + " updated DELETE: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+  }
+
+  private void updateFile(DropboxAPI.Entry entry) {
+    try {
+      File file = new File(getRoot() + "/" + entry.path);
+      File dir = file.getParentFile();
+      dir.mkdirs();
+      long remoteFileTime = RESTUtility.parseDate(entry.modified).getTime();
+      long myFileTime = file.lastModified();
+      if (!file.exists() || myFileTime < remoteFileTime) {
+        file.delete();
+        file.createNewFile();
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        mApi.getFile(entry.path, null, fileOutputStream, null);
+        file.setLastModified(remoteFileTime);
+        System.out.println(TAG + " updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+      } else {
+        System.out.println(TAG + " not updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private List<DropboxAPI.Entry> getFiles() {
+    List<DropboxAPI.Entry> files = new ArrayList<DropboxAPI.Entry>();
+    inflateFilesRecursively(files, "/" + getAccount() + "/Dropbox");
+    return files;
+  }
+
+  private void inflateFilesRecursively(List<DropboxAPI.Entry> result, String path) {
+    try {
+      DropboxAPI.Entry entries = metadataWithDeleted(path, -1, null, true, null);
+      for (DropboxAPI.Entry entry : entries.contents) {
+        if (entry.isDir) {
+          inflateFilesRecursively(result, entry.path);
+        } else {
+          result.add(entry);
+        }
+      }
+    } catch (DropboxException e) {
+      e.printStackTrace();
+    }
   }
 
   /*private API*/
@@ -85,13 +208,13 @@ public class Dropbox {
     loginButton.setText(isLogin() ? "Detach" : "Attach");
     myActivity.findViewById(R.id.dropbox).setVisibility(isLogin() ? View.VISIBLE : View.GONE);
     accountTextView.setVisibility(isLogin() ? View.VISIBLE : View.GONE);
-    try {
-      if (isLogin()) {
-        String email = mApi.accountInfo().email;
-        accountTextView.setText(email);
-      }
-    } catch (Throwable e) {
-      e.printStackTrace();
+    if (isLogin()) {
+      accountTextView.setText(getAccount());
+    }
+    if (counter == 0) {
+      dropboxAnimation.updated();
+    } else {
+      dropboxAnimation.updating();
     }
   }
 
@@ -184,6 +307,50 @@ public class Dropbox {
 
   private void login() {
     mApi.getSession().startOAuth2Authentication(myActivity);
+  }
+
+  private String getAccount() {
+    try {
+      return mApi.accountInfo().email;
+    } catch (DropboxException e) {
+      return null;
+    }
+  }
+
+  //
+
+  private String getRoot() {
+    String packageName = myActivity.getPackageName();
+    File dir;
+    if (isExternalStorageAvailable()) {
+      File sdDir = android.os.Environment.getExternalStorageDirectory();
+      dir = new File(sdDir, "/Android/data/" + packageName);
+    } else {
+      dir = new File("/data/data/" + packageName);
+    }
+    if (!dir.exists()) {
+      dir.mkdirs();
+    }
+    return dir.getAbsolutePath() + "/Dropbox/";
+  }
+
+  private static boolean isExternalStorageAvailable() {
+    boolean mExternalStorageAvailable;
+    boolean mExternalStorageWriteable;
+    String state = android.os.Environment.getExternalStorageState();
+    if (android.os.Environment.MEDIA_MOUNTED.equals(state)) {
+      // We can read and write the media
+      mExternalStorageAvailable = mExternalStorageWriteable = true;
+    } else if (android.os.Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+      // We can only read the media
+      mExternalStorageAvailable = true;
+      mExternalStorageWriteable = false;
+    } else {
+      // Something else is wrong. It may be one of many other states,
+      // but all we need to know is we can neither read nor write
+      mExternalStorageAvailable = mExternalStorageWriteable = false;
+    }
+    return mExternalStorageAvailable && mExternalStorageWriteable;
   }
 
 }

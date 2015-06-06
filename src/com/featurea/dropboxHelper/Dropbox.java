@@ -5,22 +5,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.util.*;
@@ -38,8 +34,6 @@ public class Dropbox {
   private DropboxAPI<AndroidAuthSession> mApi;
   private Button loginButton;
   private TextView accountTextView;
-  private DropboxAnimation dropboxAnimation;
-
 
   public Dropbox(Activity myActivity) {
     this.myActivity = myActivity;
@@ -57,7 +51,6 @@ public class Dropbox {
         }
       }
     });
-    dropboxAnimation = new DropboxAnimation(myActivity);
     updateUI();
   }
 
@@ -102,8 +95,6 @@ public class Dropbox {
     myActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + ID)));
   }
 
-  private int counter;
-
   public void update() {
     if (isLogin()) {
       List<DropboxAPI.Entry> files = getFiles();
@@ -116,47 +107,26 @@ public class Dropbox {
   }
 
   private void download(final DropboxAPI.Entry entry) {
-    new AsyncTask() {
-
-      @Override
-      protected void onPreExecute() {
-        super.onPreExecute();
-        counter++;
+    if (entry.isDeleted) {
+      deleteFile(entry);
+    } else {
+      if (!entry.isDir) {
+        downloadFile(entry);
       }
-
-      @Override
-      protected Object doInBackground(Object[] params) {
-        if (entry.isDeleted) {
-          deleteFile(entry);
-        } else {
-          updateFile(entry);
-        }
-
-        return null;
-      }
-
-      @Override
-      protected void onProgressUpdate(Object[] values) {
-        super.onProgressUpdate(values);
-        updateUI();
-      }
-
-      @Override
-      protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        counter--;
-        updateUI();
-      }
-    }.execute();
+    }
   }
 
   private void deleteFile(DropboxAPI.Entry entry) {
     File file = new File(getRoot() + "/" + entry.path);
-    file.delete();
-    System.out.println(TAG + " updated DELETE: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+    if (file.exists()) {
+      updating();
+      file.delete();
+      System.out.println(TAG + " DELETE: " + file.getAbsolutePath());
+      updated();
+    }
   }
 
-  private void updateFile(DropboxAPI.Entry entry) {
+  private void downloadFile(DropboxAPI.Entry entry) {
     try {
       File file = new File(getRoot() + "/" + entry.path);
       File dir = file.getParentFile();
@@ -164,14 +134,16 @@ public class Dropbox {
       long remoteFileTime = RESTUtility.parseDate(entry.modified).getTime();
       long myFileTime = file.lastModified();
       if (!file.exists() || myFileTime < remoteFileTime) {
+        updating();
         file.delete();
         file.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         mApi.getFile(entry.path, null, fileOutputStream, null);
         file.setLastModified(remoteFileTime);
-        System.out.println(TAG + " updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+        System.out.println(TAG + " UPDATE: " + file.getAbsolutePath());
+        updated();
       } else {
-        System.out.println(TAG + " not updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);
+        /*System.out.println(TAG + " not updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);*/
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -187,14 +159,16 @@ public class Dropbox {
   private void inflateFilesRecursively(List<DropboxAPI.Entry> result, String path) {
     try {
       DropboxAPI.Entry entries = metadataWithDeleted(path, -1, null, true, null);
+      if (entries == null) {
+        return;
+      }
       for (DropboxAPI.Entry entry : entries.contents) {
+        result.add(entry);
         if (entry.isDir) {
           inflateFilesRecursively(result, entry.path);
-        } else {
-          result.add(entry);
         }
       }
-    } catch (DropboxException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -206,17 +180,12 @@ public class Dropbox {
     myActivity.findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
     myActivity.findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
     loginButton.setText(isLogin() ? "Detach" : "Attach");
-    myActivity.findViewById(R.id.dropbox).setVisibility(isLogin() ? View.VISIBLE : View.GONE);
     accountTextView.setVisibility(isLogin() ? View.VISIBLE : View.GONE);
     if (isLogin()) {
       accountTextView.setText(getAccount());
     }
-    if (counter == 0) {
-      dropboxAnimation.updated();
-    } else {
-      dropboxAnimation.updating();
-    }
   }
+
 
   private void showToast(String msg) {
     Toast error = Toast.makeText(myActivity, msg, Toast.LENGTH_LONG);
@@ -351,6 +320,24 @@ public class Dropbox {
       mExternalStorageAvailable = mExternalStorageWriteable = false;
     }
     return mExternalStorageAvailable && mExternalStorageWriteable;
+  }
+
+  private void updated() {
+    myActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        UpdaterService.updated();
+      }
+    });
+  }
+
+  private void updating() {
+    myActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        UpdaterService.updating();
+      }
+    });
   }
 
 }

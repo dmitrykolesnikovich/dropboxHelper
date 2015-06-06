@@ -1,6 +1,7 @@
 package com.featurea.dropboxHelper;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
@@ -11,13 +12,16 @@ import android.widget.ImageView;
 
 public class MainActivity extends Activity {
 
-  private Dropbox dropbox;
+  public static Dropbox dropbox;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     dropbox = new Dropbox(this);
+
+    Intent serviceIntent = new Intent(this, UpdaterService.class);
+    startService(serviceIntent);
   }
 
   @Override
@@ -28,11 +32,6 @@ public class MainActivity extends Activity {
 
   public void installDropbox(View button) {
     dropbox.install();
-  }
-
-
-  public void chooseDropboxFolder(View button) {
-    dropbox.update();
   }
 
 }

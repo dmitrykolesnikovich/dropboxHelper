@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:id="@+id/workspace">
+  <Button
+      android:id="@+id/login"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Login"/>
+  <ImageView
+      android:id="@+id/imageView"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:background="@drawable/dropbox256"
+      android:layout_below="@+id/login"
+      android:onClick="chooseDropboxFolder"/>
+  <ImageView
+      android:id="@+id/mark"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:background="@drawable/updated"
+      android:layout_below="@+id/login"/>
+  <TextView
+      android:id="@+id/textView2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@+id/imageView"
+      android:layout_alignLeft="@+id/imageView"
+      android:text="Dropbox Helper"
+      android:layout_centerInParent="true"/>
+
+  <!--<Button
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Choose folder..."
+      android:id="@+id/button2"
+      android:layout_above="@+id/imageView"
+      android:layout_alignRight="@+id/imageView"/>-->
+</RelativeLayout>

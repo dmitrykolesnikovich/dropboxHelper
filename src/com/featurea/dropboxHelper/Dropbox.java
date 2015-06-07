@@ -1,15 +1,7 @@
 package com.featurea.dropboxHelper;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
@@ -32,7 +24,7 @@ public class Dropbox {
   private static final String ACCESS_SECRET_NAME = "ACCESS_SECRET";
   private DropboxAPI<AndroidAuthSession> mApi;
 
-  public Dropbox(Activity myActivity) {
+  public Dropbox() {
     AndroidAuthSession session = buildSession();
     mApi = new DropboxAPI<AndroidAuthSession>(session);
   }
@@ -86,12 +78,13 @@ public class Dropbox {
       System.out.println(TAG + " size: " + files.size());
       for (DropboxAPI.Entry entry : files) {
         System.out.println(entry.fileName());
-        download(entry);
+        updateEntry(entry);
       }
+      UpdaterService.updated();
     }
   }
 
-  private void download(final DropboxAPI.Entry entry) {
+  private void updateEntry(final DropboxAPI.Entry entry) {
     if (entry.isDeleted) {
       deleteFile(entry);
     } else {
@@ -107,7 +100,6 @@ public class Dropbox {
       UpdaterService.updating();
       file.delete();
       System.out.println(TAG + " DELETE: " + file.getAbsolutePath());
-      UpdaterService.updated();
     }
   }
 
@@ -118,7 +110,7 @@ public class Dropbox {
       dir.mkdirs();
       long remoteFileTime = RESTUtility.parseDate(entry.modified).getTime();
       long myFileTime = file.lastModified();
-      if (!file.exists() || myFileTime < remoteFileTime) {
+      if (!file.exists() || myFileTime < remoteFileTime || file.length() != entry.bytes) {
         UpdaterService.updating();
         file.delete();
         file.createNewFile();
@@ -126,7 +118,6 @@ public class Dropbox {
         mApi.getFile(entry.path, null, fileOutputStream, null);
         file.setLastModified(remoteFileTime);
         System.out.println(TAG + " UPDATE: " + file.getAbsolutePath());
-        UpdaterService.updated();
       } else {
         /*System.out.println(TAG + " not updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);*/
       }

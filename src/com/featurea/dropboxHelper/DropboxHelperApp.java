@@ -8,9 +8,16 @@ import java.io.File;
 public class DropboxHelperApp extends Application {
 
   public static DropboxHelperApp instance;
+  public Dropbox dropbox;
 
   public DropboxHelperApp() {
     instance = this;
+  }
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    dropbox = new Dropbox();
   }
 
   public static boolean isInstalled() {

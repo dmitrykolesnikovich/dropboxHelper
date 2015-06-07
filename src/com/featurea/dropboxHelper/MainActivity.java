@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-  public static Dropbox dropbox;
   private Button loginButton;
   private TextView accountTextView;
 
@@ -23,11 +22,12 @@ public class MainActivity extends Activity {
     loginButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        dropbox.updateAccountStatus();
+        if (DropboxHelperApp.instance != null) {
+          DropboxHelperApp.instance.dropbox.updateAccountStatus();
+        }
         updateUI();
       }
     });
-    dropbox = new Dropbox(this);
 
     Intent serviceIntent = new Intent(this, UpdaterService.class);
     startService(serviceIntent);
@@ -36,7 +36,9 @@ public class MainActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    dropbox.resume();
+    if (DropboxHelperApp.instance != null) {
+      DropboxHelperApp.instance.dropbox.resume();
+    }
     updateUI();
   }
 
@@ -48,10 +50,12 @@ public class MainActivity extends Activity {
     boolean isInstalled = DropboxHelperApp.isInstalled();
     findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
     findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
-    loginButton.setText(dropbox.isLogin() ? "Detach" : "Attach");
-    accountTextView.setVisibility(dropbox.isLogin() ? View.VISIBLE : View.GONE);
-    if (dropbox.isLogin()) {
-      accountTextView.setText(dropbox.getAccount());
+    if (DropboxHelperApp.instance != null) {
+      loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach" : "Attach");
+      accountTextView.setVisibility(DropboxHelperApp.instance.dropbox.isLogin() ? View.VISIBLE : View.GONE);
+      if (DropboxHelperApp.instance.dropbox.isLogin()) {
+        accountTextView.setText(DropboxHelperApp.instance.dropbox.getAccount());
+      }
     }
   }
 

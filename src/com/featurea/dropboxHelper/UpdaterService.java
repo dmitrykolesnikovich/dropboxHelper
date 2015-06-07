@@ -10,7 +10,8 @@ import android.os.IBinder;
 public class UpdaterService extends Service {
 
   private static int NOTIFICATION = 10002;
-  private static UpdaterService instance;
+  public static UpdaterService instance;
+
 
   public UpdaterService() {
     instance = this;
@@ -24,14 +25,15 @@ public class UpdaterService extends Service {
   @Override
   public void onCreate() {
     super.onCreate();
+    updated();
     new Thread(new Runnable() {
       public void run() {
         while (true) {
-          if (MainActivity.dropbox != null) {
-            MainActivity.dropbox.update();
+          if (DropboxHelperApp.instance.dropbox != null) {
+            DropboxHelperApp.instance.dropbox.update();
           }
           try {
-            Thread.sleep(5000);
+            Thread.sleep(2000);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }

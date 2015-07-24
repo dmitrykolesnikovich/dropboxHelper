@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
         findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
         if (DropboxHelperApp.instance != null) {
-          loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach Dropbox account" : "Attach Dropbox account");
+          loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Disconnect from Dropbox" : "Connect to Dropbox");
           if (!DropboxHelperApp.instance.dropbox.isLogin()) {
             statusTextView.setVisibility(View.VISIBLE);
             statusTextView.setText(R.string.attach);

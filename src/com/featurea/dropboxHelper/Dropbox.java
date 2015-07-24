@@ -101,7 +101,7 @@ public class Dropbox {
     File file = new File(DropboxHelperApp.getRoot() + "/" + entry.path);
     String message = file.getName();
     if (file.exists()) {
-      UpdaterService.updating(message);
+      /*UpdaterService.updating(message);*/
       file.delete();
       System.out.println(TAG + message);
     }
@@ -115,14 +115,13 @@ public class Dropbox {
       long remoteFileTime = RESTUtility.parseDate(entry.modified).getTime();
       long myFileTime = file.lastModified();
       if (!file.exists() || myFileTime < remoteFileTime || file.length() != entry.bytes) {
-        String message = file.getName();
-        UpdaterService.updating(message);
         file.delete();
         file.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         mApi.getFile(entry.path, null, fileOutputStream, null);
         file.setLastModified(remoteFileTime);
         System.out.println(TAG + " UPDATE: " + file.getAbsolutePath());
+        UpdaterService.updating(file.getName());
       } else {
         /*System.out.println(TAG + " not updated: " + file.getAbsolutePath() + ", revision: " + entry.rev);*/
       }

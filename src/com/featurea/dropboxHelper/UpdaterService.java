@@ -141,6 +141,7 @@ public class UpdaterService extends Service {
     NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
     Notification notification = builder.build();
     notification.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+    notification.priority = Notification.PRIORITY_MAX;
     notificationManager.notify(NOTIFICATION_ID, notification);
   }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dropbox Helper</string>
-    <string name="installDropboxFirst">To make me helpful install Dropbox first</string>
+    <string name="installDropboxFirst">Install Dropbox first</string>
     <string name="installDropbox">Install Dropbox</string>
 </resources>

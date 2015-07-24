@@ -60,7 +60,7 @@ public class Dropbox {
     }
   }
 
-  public void resume() {
+  public void onResume() {
     AndroidAuthSession session = mApi.getSession();
     if (session.authenticationSuccessful()) {
       try {
@@ -85,6 +85,9 @@ public class Dropbox {
   }
 
   private void updateEntry(final DropboxAPI.Entry entry) {
+    if (!isLogin()) {
+      return;
+    }
     if (entry.isDeleted) {
       deleteFile(entry);
     } else {
@@ -96,10 +99,11 @@ public class Dropbox {
 
   private void deleteFile(DropboxAPI.Entry entry) {
     File file = new File(DropboxHelperApp.getRoot() + "/" + entry.path);
+    String message = file.getName();
     if (file.exists()) {
-      UpdaterService.updating();
+      UpdaterService.updating(message);
       file.delete();
-      System.out.println(TAG + " DELETE: " + file.getAbsolutePath());
+      System.out.println(TAG + message);
     }
   }
 
@@ -111,7 +115,8 @@ public class Dropbox {
       long remoteFileTime = RESTUtility.parseDate(entry.modified).getTime();
       long myFileTime = file.lastModified();
       if (!file.exists() || myFileTime < remoteFileTime || file.length() != entry.bytes) {
-        UpdaterService.updating();
+        String message = file.getName();
+        UpdaterService.updating(message);
         file.delete();
         file.createNewFile();
         FileOutputStream fileOutputStream = new FileOutputStream(file);
@@ -219,6 +224,7 @@ public class Dropbox {
   private void logout() {
     mApi.getSession().unlink();
     clearKeys();
+    UpdaterService.instance.stop();
   }
 
   private void login() {

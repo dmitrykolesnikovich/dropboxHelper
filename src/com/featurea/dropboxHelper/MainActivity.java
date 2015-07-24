@@ -12,13 +12,15 @@ public class MainActivity extends Activity {
 
   private Button loginButton;
   private TextView accountTextView;
+  private TextView directoryTextView;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     loginButton = (Button) findViewById(R.id.login);
-    accountTextView = (TextView) findViewById(R.id.accout);
+    accountTextView = (TextView) findViewById(R.id.account);
+    directoryTextView = (TextView) findViewById(R.id.directory);
     loginButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -37,7 +39,7 @@ public class MainActivity extends Activity {
   protected void onResume() {
     super.onResume();
     if (DropboxHelperApp.instance != null) {
-      DropboxHelperApp.instance.dropbox.resume();
+      DropboxHelperApp.instance.dropbox.onResume();
     }
     updateUI();
   }
@@ -51,10 +53,19 @@ public class MainActivity extends Activity {
     findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
     findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
     if (DropboxHelperApp.instance != null) {
-      loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach" : "Attach");
+      loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach Dropbox account" : "Attach Dropbox account");
       accountTextView.setVisibility(DropboxHelperApp.instance.dropbox.isLogin() ? View.VISIBLE : View.GONE);
+      directoryTextView.setVisibility(DropboxHelperApp.instance.dropbox.isLogin() ? View.VISIBLE : View.GONE);
       if (DropboxHelperApp.instance.dropbox.isLogin()) {
-        accountTextView.setText(DropboxHelperApp.instance.dropbox.getAccount());
+        accountTextView.setText("Dropbox account: " + DropboxHelperApp.instance.dropbox.getAccount());
+        directoryTextView.setText("Dropbox location: " + DropboxHelperApp.getRoot());
+      }
+      if (UpdaterService.instance != null) {
+        if (DropboxHelperApp.instance.dropbox.isLogin()) {
+          UpdaterService.instance.start();
+        } else {
+          UpdaterService.instance.stop();
+        }
       }
     }
   }

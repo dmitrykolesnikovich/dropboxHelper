@@ -33,8 +33,7 @@ public class DropboxHelperApp extends Application {
     String packageName = instance.getPackageName();
     File dir;
     if (isExternalStorageAvailable()) {
-      File sdDir = android.os.Environment.getExternalStorageDirectory();
-      dir = new File(sdDir, "/Android/data/" + packageName);
+      dir = android.os.Environment.getExternalStorageDirectory();
     } else {
       dir = new File("/data/data/" + packageName);
     }

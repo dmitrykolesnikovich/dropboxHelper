@@ -17,7 +17,6 @@ public class UpdaterService extends Service {
   private UpdaterThread updaterThread;
   public boolean isUpdated = true;
   public Notification.Builder builder;
-  private boolean isFirstTime = true;
 
   public UpdaterService() {
     instance = this;
@@ -44,8 +43,8 @@ public class UpdaterService extends Service {
     if (DropboxHelperApp.instance.dropbox.isLogin()) {
       if (instance != null) {
         NotificationManager notificationManager = (NotificationManager) instance.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-        instance.builder.setContentText(instance.getResources().getString(R.string.upToDate)).setSmallIcon(R.drawable.status_icon_updated);
-        notificationManager.notify(NOTIFICATION_ID, instance.builder.build());
+        instance.builder.setContentText("Up to date").setSmallIcon(R.drawable.status_icon_updated);
+        instance.makeNotification();
         Log.d(DropboxHelperApp.TAG, "notificationManager.notify() updated");
         instance.isUpdated = true;
       }
@@ -57,12 +56,17 @@ public class UpdaterService extends Service {
   public static void updating(String file) {
     if (DropboxHelperApp.instance.dropbox.isLogin()) {
       if (instance != null) {
-        NotificationManager notificationManager = (NotificationManager) instance.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-        String contentText = instance.getResources().getString(R.string.syncing) + " \"" + file + "\"";
-        instance.builder.setContentText(contentText).setSmallIcon(R.drawable.status_icon_updating);
-        notificationManager.notify(NOTIFICATION_ID, instance.builder.build());
+        final String contentText = "download \"" + file + "\"";
+        instance.builder.setContentText("Syncing").setSmallIcon(R.drawable.status_icon_updating);
+        instance.makeNotification();
         Log.d(DropboxHelperApp.TAG, "notificationManager.notify() updating");
         instance.isUpdated = false;
+        MainActivity.instance.runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            MainActivity.instance.statusTextView.setText("Dropbox syncing: " + contentText);
+          }
+        });
       }
     }
     MainActivity.instance.updateUI();
@@ -72,9 +76,8 @@ public class UpdaterService extends Service {
   public static void paused() {
     if (DropboxHelperApp.instance.dropbox.isLogin()) {
       if (instance != null) {
-        NotificationManager notificationManager = (NotificationManager) instance.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-        instance.builder.setContentText(instance.getResources().getString(R.string.syncingPaused)).setSmallIcon(R.drawable.status_icon_paused);
-        notificationManager.notify(NOTIFICATION_ID, instance.builder.build());
+        instance.builder.setContentText("Paused").setSmallIcon(R.drawable.status_icon_paused);
+        instance.makeNotification();
         Log.d(DropboxHelperApp.TAG, "notificationManager.notify() paused");
         instance.isUpdated = true;
       }
@@ -97,6 +100,10 @@ public class UpdaterService extends Service {
       updaterThread.isRunning = false;
     }
     paused();
+    if (DropboxHelperApp.instance != null && !DropboxHelperApp.instance.dropbox.isLogin()) {
+      NotificationManager notificationManager = (NotificationManager) instance.getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+      notificationManager.cancel(NOTIFICATION_ID);
+    }
   }
 
   private class UpdaterThread extends Thread {
@@ -126,4 +133,15 @@ public class UpdaterService extends Service {
     }
     return false;
   }
+
+  /*private API*/
+
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+  private void makeNotification() {
+    NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+    Notification notification = builder.build();
+    notification.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+    notificationManager.notify(NOTIFICATION_ID, notification);
+  }
+
 }

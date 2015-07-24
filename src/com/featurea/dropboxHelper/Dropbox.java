@@ -225,6 +225,7 @@ public class Dropbox {
     mApi.getSession().unlink();
     clearKeys();
     UpdaterService.instance.stop();
+
   }
 
   private void login() {

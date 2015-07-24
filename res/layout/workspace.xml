@@ -4,12 +4,19 @@
               android:layout_height="match_parent"
               android:orientation="vertical"
               android:id="@+id/workspace">
-  <Button
-      android:id="@+id/login"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="12dp"
-      android:layout_gravity="center_horizontal"/>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="12dp">
+    <Button
+        android:id="@+id/login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"/>
+    <Button
+        android:id="@+id/pauseSyncing"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"/>
+  </LinearLayout>
   <TextView
       android:id="@+id/account"
       android:visibility="gone"
@@ -38,11 +45,4 @@
       android:layout_height="wrap_content"
       android:layout_marginLeft="2dp"
       android:layout_marginRight="2dp"/>
-  <Button
-      android:id="@+id/pauseSyncing"
-      android:visibility="gone"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="12dp"
-      android:layout_gravity="center_horizontal"/>
 </LinearLayout>

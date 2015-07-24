@@ -5,12 +5,11 @@
     In order to use Dropbox Helper app you should install original Dropbox app from Google Play first.
   </string>
   <string name="installDropbox">Install Dropbox</string>
-  <string name="upToDate">Up to date</string>
-  <string name="syncing">Syncing</string>
   <string name="pauseSyncing">Pause syncing</string>
   <string name="resumeSyncing">Resume syncing</string>
   <string name="attach">Attach Dropbox account to Dropbox Helper app in order to allow Dropbox Helper access to the
     files and folders in your Dropbox
   </string>
-  <string name="syncingPaused">Syncing paused</string>
+  <string name="syncingPaused">paused</string>
+  <string name="syncingUpToDate">up to date</string>
 </resources>

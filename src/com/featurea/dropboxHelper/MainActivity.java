@@ -15,7 +15,7 @@ public class MainActivity extends Activity {
   private Button pauseSyncingButton;
   private TextView accountTextView;
   private TextView directoryTextView;
-  private TextView statusTextView;
+  public TextView statusTextView;
   private TextView detailsTextView;
 
   public MainActivity() {
@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.install).setVisibility(isInstalled ? View.GONE : View.VISIBLE);
         findViewById(R.id.workspace).setVisibility(isInstalled ? View.VISIBLE : View.GONE);
         if (DropboxHelperApp.instance != null) {
-          loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach Dropbox account from Dropbox Helper" : "Attach Dropbox account to Dropbox Helper");
+          loginButton.setText(DropboxHelperApp.instance.dropbox.isLogin() ? "Detach Dropbox account" : "Attach Dropbox account");
           if (!DropboxHelperApp.instance.dropbox.isLogin()) {
             statusTextView.setVisibility(View.VISIBLE);
             statusTextView.setText(R.string.attach);
@@ -95,11 +95,13 @@ public class MainActivity extends Activity {
           }
           if (UpdaterService.instance != null) {
             if (UpdaterService.instance.isRunning()) {
-              String statusMessage = getResources().getString(UpdaterService.instance.isUpdated ? R.string.upToDate : R.string.syncing);
-              statusTextView.setText("Dropbox status: " + statusMessage);
+              if (UpdaterService.instance.isUpdated) {
+                String statusMessage = getResources().getString(R.string.syncingUpToDate);
+                statusTextView.setText("Dropbox status: " + statusMessage);
+              }
             } else {
-              String statusMessage = getResources().getString(UpdaterService.instance.isUpdated ? R.string.upToDate : R.string.syncingPaused);
-              statusTextView.setText("Dropbox status: " + statusMessage);
+              String statusMessage = getResources().getString(UpdaterService.instance.isUpdated ? R.string.syncingUpToDate : R.string.syncingPaused);
+              statusTextView.setText("Dropbox syncing: " + statusMessage);
             }
             pauseSyncingButton.setVisibility(DropboxHelperApp.instance.dropbox.isLogin() ? View.VISIBLE : View.GONE);
             pauseSyncingButton.setText(UpdaterService.instance.isRunning() ? R.string.pauseSyncing : R.string.resumeSyncing);

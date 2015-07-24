@@ -3,15 +3,20 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical">
-  <TextView
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:text="@string/installDropboxFirst"
-      android:id="@+id/textView"/>
   <Button
       android:id="@+id/button"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:text="@string/installDropbox"
-      android:onClick="installDropbox"/>
+      android:onClick="installDropbox"
+      android:layout_gravity="center_horizontal"
+      android:layout_margin="12dp"/>
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/installDropboxFirst"
+      android:id="@+id/textView"
+      android:layout_marginLeft="2dp"
+      android:layout_marginRight="2dp"
+      android:gravity="center_horizontal"/>
 </LinearLayout>

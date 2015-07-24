@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dropbox Helper</string>
-    <string name="installDropboxFirst">Install Dropbox first</string>
-    <string name="installDropbox">Install Dropbox</string>
+  <string name="app_name">Dropbox Helper</string>
+  <string name="installDropboxFirst">
+    In order to use Dropbox Helper app you should install original Dropbox app from Google Play first.
+  </string>
+  <string name="installDropbox">Install Dropbox</string>
+  <string name="upToDate">Up to date</string>
+  <string name="syncing">Syncing</string>
+  <string name="pauseSyncing">Pause syncing</string>
+  <string name="resumeSyncing">Resume syncing</string>
+  <string name="attach">Attach Dropbox account to Dropbox Helper app in order to allow Dropbox Helper access to the
+    files and folders in your Dropbox
+  </string>
+  <string name="syncingPaused">Syncing paused</string>
 </resources>

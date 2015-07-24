@@ -7,6 +7,7 @@ import java.io.File;
 
 public class DropboxHelperApp extends Application {
 
+  public static final String TAG = "DropboxHelperApp";
   public static DropboxHelperApp instance;
   public Dropbox dropbox;
 
